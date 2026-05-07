@@ -1,0 +1,9 @@
+{
+  "name": "ash-dormer-booking",
+  "version": "1.0.0",
+  "description": "Ash Dormer Booking System",
+  "dependencies": {
+    "stripe": "^14.0.0",
+    "twilio": "^4.0.0"
+  }
+}
