@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book with Ash Dormer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #F7F3EE;
+      --dark: #1a1612;
+      --muted: #6b6560;
+      --accent: #c4a882;
+      --accent-dark: #a08860;
+      --border: #e0d8cf;
+      --error: #c0392b;
+      --success: #2d6a4f;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 2rem 1.5rem 1.5rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      color: var(--dark);
+    }
+
+    header p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .step { display: none; }
+    .step.active { display: block; }
+
+    .step-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem;
+      font-weight: 400;
+      margin-bottom: 1.5rem;
+      line-height: 1.2;
+    }
+
+    .service-card {
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.6rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: white;
+    }
+
+    .service-card:hover { border-color: var(--accent); }
+    .service-card.selected { border-color: var(--accent-dark); background: #fdf8f3; }
+
+    .service-card .name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+      font-weight: 500;
+    }
+
+    .service-card .meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+
+    .service-card .price {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-top: 0.4rem;
+    }
+
+    .service-card .deposit-note {
+      font-size: 0.72rem;
+      color: var(--accent-dark);
+      margin-top: 0.15rem;
+    }
+
+    .service-card .description {
+      font-size: 0.76rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+      line-height: 1.5;
+    }
+
+    .category-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 1.2rem 0 0.5rem;
+    }
+
+    .patch-notice {
+      background: #fdf8f3;
+      border: 1px solid var(--accent);
+      border-radius: 2px;
+      padding: 0.8rem 1rem;
+      font-size: 0.78rem;
+      color: var(--dark);
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    /* Calendar */
+    .calendar-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .calendar-nav button {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      color: var(--dark);
+      border-radius: 2px;
+    }
+
+    .calendar-nav span {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 1.5rem;
+    }
+
+    .cal-day-label {
+      text-align: center;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0.3rem 0;
+    }
+
+    .cal-day {
+      text-align: center;
+      padding: 0.55rem 0;
+      font-size: 0.85rem;
+      border-radius: 2px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.1s;
+    }
+
+    .cal-day.empty { cursor: default; }
+    .cal-day.unavailable { color: var(--border); cursor: not-allowed; }
+    .cal-day.available:hover { border-color: var(--accent); background: #fdf8f3; }
+    .cal-day.selected { background: var(--accent-dark); color: white; border-color: var(--accent-dark); }
+
+    .time-slots {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .time-slot {
+      text-align: center;
+      padding: 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      background: white;
+      transition: all 0.1s;
+    }
+
+    .time-slot:hover { border-color: var(--accent); }
+    .time-slot.selected { background: var(--accent-dark); color: white; border-color: var(--accent-dark); }
+    .time-slot.unavailable { color: var(--border); cursor: not-allowed; background: #f9f9f9; }
+
+    /* Form */
+    .form-group { margin-bottom: 1.1rem; }
+
+    label {
+      display: block;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.7rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      background: white;
+      color: var(--dark);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus, textarea:focus { border-color: var(--accent-dark); }
+
+    /* Terms */
+    .terms-box {
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 1.2rem;
+      background: white;
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: var(--dark);
+      margin-bottom: 1rem;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .terms-box h4 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .terms-box p { margin-bottom: 0.6rem; }
+
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      margin-top: 2px;
+      accent-color: var(--accent-dark);
+    }
+
+    .checkbox-row span {
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: var(--dark);
+    }
+
+    /* Payment */
+    #card-element {
+      padding: 0.7rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      background: white;
+      margin-bottom: 0.5rem;
+    }
+
+    #card-errors {
+      color: var(--error);
+      font-size: 0.75rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .booking-summary {
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 1rem 1.2rem;
+      background: white;
+      margin-bottom: 1.5rem;
+      font-size: 0.82rem;
+    }
+
+    .booking-summary h4 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      margin-bottom: 0.8rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+      color: var(--muted);
+    }
+
+    .summary-row.total {
+      font-weight: 500;
+      color: var(--dark);
+      border-top: 1px solid var(--border);
+      padding-top: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 0.9rem;
+      border: none;
+      border-radius: 2px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--dark);
+      color: var(--cream);
+    }
+
+    .btn-primary:hover { background: #2d2825; }
+    .btn-primary:disabled { background: var(--border); cursor: not-allowed; }
+
+    .btn-back {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      margin-bottom: 0.8rem;
+    }
+
+    .btn-back:hover { border-color: var(--muted); color: var(--dark); }
+
+    /* Progress */
+    .progress {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 2rem;
+    }
+
+    .progress-dot {
+      height: 3px;
+      flex: 1;
+      background: var(--border);
+      border-radius: 2px;
+      transition: background 0.2s;
+    }
+
+    .progress-dot.done { background: var(--accent-dark); }
+
+    /* Success */
+    .success-screen {
+      text-align: center;
+      padding: 2rem 0;
+    }
+
+    .success-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #e8f5e9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 1.8rem;
+    }
+
+    .success-screen h2 {
+      margin-bottom: 0.8rem;
+    }
+
+    .success-screen p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 0.5rem;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .no-slots {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-style: italic;
+      padding: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Ash Dormer</h1>
+  <p>Permanent Makeup &amp; Beauty — Hazlemere, Buckinghamshire</p>
+</header>
+
+<div class="container">
+
+  <!-- STEP 1: Choose Service -->
+  <div class="step active" id="step-1">
+    <div class="progress">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+    <div class="step-label">Step 1 of 4</div>
+    <h2>Choose your treatment</h2>
+
+    <div class="category-label">Brow Treatments</div>
+    <div class="service-card" onclick="selectService(this, 'Brow Wax & Tint', 27.50, 35, 13.75, 'small')">
+      <div class="name">Brow Wax &amp; Tint</div>
+      <div class="meta">30 min</div>
+      <div class="description">A process used to darken the brows to suit your natural or desired depth of colour, giving a more defined look, followed by a brow tidy or re-shape using wax and tweezers. Patch test required at least 48 hours prior to treatment.</div>
+      <div class="price">£27.50</div>
+      <div class="deposit-note">Booking fee: £13.75 (50% due now)</div>
+    </div>
+    <div class="service-card" onclick="selectService(this, 'Brow Lamination', 55.00, 65, 27.50, 'small')">
+      <div class="name">Brow Lamination</div>
+      <div class="meta">1 hour</div>
+      <div class="description">An eyebrow sculpting treatment that lasts around 6 weeks. This treatment enables you to gain control over unruly hairs, creating thicker brows with more movement. An optional tint and shape is included. Patch test 48 hours prior to treatment is required.</div>
+      <div class="price">£55.00</div>
+      <div class="deposit-note">Booking fee: £27.50 (50% due now)</div>
+    </div>
+
+    <div class="category-label">Lash Treatments</div>
+    <div class="service-card" onclick="selectService(this, 'Lash Tint', 15.00, 20, 7.50, 'small')">
+      <div class="name">Lash Tint</div>
+      <div class="meta">15 min</div>
+      <div class="description">A process in which tint is applied to the eyelashes to darken them, giving the appearance of darker, fuller lashes without needing mascara or other makeup products. Patch test required 48 hours prior to treatment.</div>
+      <div class="price">£15.00</div>
+      <div class="deposit-note">Booking fee: £7.50 (50% due now)</div>
+    </div>
+    <div class="service-card" onclick="selectService(this, 'Lash Lift & Tint', 55.00, 70, 27.50, 'small')">
+      <div class="name">Lash Lift &amp; Tint</div>
+      <div class="meta">1 hour</div>
+      <div class="description">An all-natural, semi-permanent treatment that gives you the appearance of fuller, thicker eyelashes. The natural lashes are boosted from the root, giving them a lifted, lengthened appearance lasting around 6 weeks. A tint is included. Patch test 48 hours prior to treatment is required.</div>
+      <div class="price">£55.00</div>
+      <div class="deposit-note">Booking fee: £27.50 (50% due now)</div>
+    </div>
+
+    <div class="category-label">Packages</div>
+    <div class="service-card" onclick="selectService(this, 'Lash & Brow Package', 100.00, 125, 50.00, 'small')">
+      <div class="name">Lash &amp; Brow Package</div>
+      <div class="meta">2 hours</div>
+      <div class="description">The perfect combination — a Lash Lift and Brow Lamination together in one appointment. Results last around 6 weeks. Patch test 48 hours prior to treatment is required.</div>
+      <div class="price">£100.00</div>
+      <div class="deposit-note">Booking fee: £50.00 (50% due now)</div>
+    </div>
+
+    <div class="category-label">Permanent Makeup</div>
+    <div class="service-card" onclick="selectService(this, 'Microblading Initial Session', 425.00, 145, 50.00, 'pmu')">
+      <div class="name">Microblading Initial Session</div>
+      <div class="meta">2 hr 15 min · Includes consultation · Females only</div>
+      <div class="description">A permanent makeup technique to create natural looking hair stroke brows. Consultation is included at the beginning. Patch test 48 hours prior to treatment is required. Please note: if you have previous microblading or permanent brow makeup, do not book this service — contact Ash directly first.</div>
+      <div class="price">£425.00</div>
+      <div class="deposit-note">Booking fee: £50.00 (fixed, due now)</div>
+    </div>
+    <div class="service-card" onclick="selectService(this, 'Combination Brows', 425.00, 165, 50.00, 'pmu')">
+      <div class="name">Combination Brows</div>
+      <div class="meta">2 hr 30 min · Females only</div>
+      <div class="description">Combination brows use both microblading and machine techniques in perfect harmony to create a soft natural front of the brow leading into a fuller, more defined body, arch and tail of the brow.</div>
+      <div class="price">£425.00</div>
+      <div class="deposit-note">Booking fee: £50.00 (fixed, due now)</div>
+    </div>
+    <div class="service-card" onclick="selectService(this, 'Ombré Brows', 425.00, 165, 50.00, 'pmu')">
+      <div class="name">Ombré Brows</div>
+      <div class="meta">2 hr 30 min · All skin types</div>
+      <div class="description">Also known as powder brows, this method uses a digital machine to create a soft powdered effect underneath the existing eyebrow hair. Fantastic for all skin types.</div>
+      <div class="price">£425.00</div>
+      <div class="deposit-note">Booking fee: £50.00 (fixed, due now)</div>
+    </div>
+    <div class="service-card" onclick="selectService(this, '6-18 Month Colour Boost', 195.00, 120, 50.00, 'pmu')">
+      <div class="name">6–18 Month Colour Boost</div>
+      <div class="meta">2 hours · Existing clients only</div>
+      <div class="description">Colour boost for microblading or machine method brows from 6–18 months after your 6–8 week perfecting session. Please only book if you have had a treatment with Ash previously.</div>
+      <div class="price">£195.00</div>
+      <div class="deposit-note">Booking fee: £50.00 (fixed, due now)</div>
+    </div>
+    <div class="service-card" onclick="selectService(this, '18 Month+ Colour Boost', 225.00, 120, 50.00, 'pmu')">
+      <div class="name">18 Month+ Colour Boost</div>
+      <div class="meta">2 hours · Existing clients only</div>
+      <div class="description">Colour boost for microblading or machine method brows from 18 months after your 6–8 week perfecting session. Please only book if you have had a treatment with Ash previously.</div>
+      <div class="price">£225.00</div>
+      <div class="deposit-note">Booking fee: £50.00 (fixed, due now)</div>
+    </div>
+    <div class="service-card" onclick="selectService(this, 'Face to Face Consultation (PMU)', 20.00, 10, 20.00, 'small')">
+      <div class="name">Face to Face Consultation</div>
+      <div class="meta">10 min · PMU only</div>
+      <div class="description">A £20 booking fee applies, which comes off your treatment price if you decide to go ahead with your permanent makeup brows. The full £20 is retained if you do not attend. A virtual consultation is also available — contact Ash via WhatsApp on 07821 530442 to arrange.</div>
+      <div class="price">£20.00</div>
+      <div class="deposit-note">Booking fee: £20.00 (deducted from treatment if you proceed)</div>
+    </div>
+
+    <div class="category-label">Body Sculpting</div>
+    <div class="service-card" onclick="selectService(this, 'Small Area Fat Cavitation', 90.00, 45, 45.00, 'small')">
+      <div class="name">Small Area Fat Cavitation</div>
+      <div class="meta">45 min · Females only</div>
+      <div class="description">A non-invasive body sculpting treatment targeting stubborn fat on smaller areas such as the arms, upper back or love handles. Using advanced technology to help break down fat cells, giving a smoother, more contoured silhouette. Best results achieved when booked as a course. Not suitable if pregnant or breastfeeding, or if you have metal implants or conflicting conditions.</div>
+      <div class="price">£90.00</div>
+      <div class="deposit-note">Booking fee: £45.00 (50% due now)</div>
+    </div>
+    <div class="service-card" onclick="selectService(this, 'Large Area Fat Cavitation', 100.00, 45, 50.00, 'small')">
+      <div class="name">Large Area Fat Cavitation</div>
+      <div class="meta">45 min · Females only</div>
+      <div class="description">A non-invasive body sculpting treatment targeting stubborn fat on larger areas such as the stomach or thighs. Using advanced technology to help break down fat cells, giving a smoother, more contoured silhouette. Best results achieved when booked as a course. Not suitable if pregnant or breastfeeding, or if you have metal implants or conflicting conditions.</div>
+      <div class="price">£100.00</div>
+      <div class="deposit-note">Booking fee: £50.00 (50% due now)</div>
+    </div>
+
+    <div class="patch-notice">
+      <strong>Patch test required:</strong> A patch test is mandatory 48 hours prior to treatment for all lash, brow and PMU treatments. Please WhatsApp Ash on <strong>07821 530442</strong> to arrange collection before booking.
+    </div>
+
+    <button class="btn btn-primary" onclick="goToStep(2)" id="btn-next-1" disabled>Continue</button>
+  </div>
+
+  <!-- STEP 2: Choose Date & Time -->
+  <div class="step" id="step-2">
+    <div class="progress">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+    <div class="step-label">Step 2 of 4</div>
+    <h2>Choose a date &amp; time</h2>
+
+    <div class="calendar-nav">
+      <button onclick="prevMonth()">&#8592;</button>
+      <span id="cal-month-label"></span>
+      <button onclick="nextMonth()">&#8594;</button>
+    </div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+
+    <div id="time-slot-section" style="display:none;">
+      <div class="category-label" id="time-slot-label"></div>
+      <div class="time-slots" id="time-slots"></div>
+    </div>
+
+    <button class="btn btn-back" onclick="goToStep(1)">&#8592; Back</button>
+    <button class="btn btn-primary" onclick="goToStep(3)" id="btn-next-2" disabled>Continue</button>
+  </div>
+
+  <!-- STEP 3: Your Details -->
+  <div class="step" id="step-3">
+    <div class="progress">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot"></div>
+    </div>
+    <div class="step-label">Step 3 of 4</div>
+    <h2>Your details</h2>
+
+    <div class="form-group">
+      <label>First name</label>
+      <input type="text" id="first-name" placeholder="e.g. Sarah" />
+    </div>
+    <div class="form-group">
+      <label>Last name</label>
+      <input type="text" id="last-name" placeholder="e.g. Johnson" />
+    </div>
+    <div class="form-group">
+      <label>Email address</label>
+      <input type="email" id="email" placeholder="e.g. sarah@email.com" />
+    </div>
+    <div class="form-group">
+      <label>Mobile number</label>
+      <input type="tel" id="phone" placeholder="e.g. 07700 900000" />
+    </div>
+    <div class="form-group">
+      <label>Notes (optional)</label>
+      <textarea id="notes" rows="3" placeholder="Anything Ash should know before your appointment..."></textarea>
+    </div>
+
+    <button class="btn btn-back" onclick="goToStep(2)">&#8592; Back</button>
+    <button class="btn btn-primary" onclick="goToStep(4)" id="btn-next-3">Continue</button>
+  </div>
+
+  <!-- STEP 4: Terms & Payment -->
+  <div class="step" id="step-4">
+    <div class="progress">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+    </div>
+    <div class="step-label">Step 4 of 4</div>
+    <h2>Confirm &amp; pay</h2>
+
+    <div class="booking-summary">
+      <h4>Booking Summary</h4>
+      <div class="summary-row"><span>Treatment</span><span id="sum-service"></span></div>
+      <div class="summary-row"><span>Date</span><span id="sum-date"></span></div>
+      <div class="summary-row"><span>Time</span><span id="sum-time"></span></div>
+      <div class="summary-row"><span>Duration</span><span id="sum-duration"></span></div>
+      <div class="summary-row"><span>Location</span><span>Hazlemere, HP15</span></div>
+      <div class="summary-row total"><span>Booking fee due now</span><span id="sum-deposit"></span></div>
+      <div class="summary-row"><span style="font-size:0.75rem;color:var(--muted)">Balance due on the day (cash preferred)</span><span id="sum-balance" style="font-size:0.75rem;color:var(--muted)"></span></div>
+    </div>
+
+    <div class="terms-box">
+      <h4>Booking Policy</h4>
+      <p><strong>Booking fee:</strong> Your booking fee is nonrefundable and nontransferable under any circumstances.</p>
+      <p><strong>Cancellations:</strong> If you cancel within 48 hours of your appointment your booking fee is forfeited in full. A new booking fee will be required to rebook.</p>
+      <p><strong>Rescheduling:</strong> You may reschedule your appointment once only. Rescheduling requests must be made more than 48 hours before your appointment. Your booking fee will not be transferred if you reschedule within 48 hours.</p>
+      <p><strong>No shows:</strong> If you do not attend your appointment without notice you will be required to pay your full treatment balance before a new appointment can be booked.</p>
+      <p><strong>Patch tests:</strong> A patch test is mandatory 48 hours prior to lash, brow and PMU treatments. Failure to complete a patch test may result in your appointment being cancelled without refund of your booking fee.</p>
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="terms-check" onchange="togglePayBtn()" />
+      <span>By placing this booking I understand that my booking fee is nonrefundable and nontransferable, cancellations within 48 hours forfeit the booking fee, I may only reschedule once with more than 48 hours notice, and no shows will require full balance payment before rebooking.</span>
+    </div>
+
+    <div class="form-group">
+      <label>Card details</label>
+      <div id="card-element"></div>
+      <div id="card-errors"></div>
+    </div>
+
+    <button class="btn btn-back" onclick="goToStep(3)">&#8592; Back</button>
+    <button class="btn btn-primary" id="pay-btn" onclick="handlePayment()" disabled>
+      Pay Booking Fee — <span id="pay-amount"></span>
+    </button>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="step" id="step-success">
+    <div class="success-screen">
+      <div class="success-icon">✓</div>
+      <h2>You're booked in!</h2>
+      <p>A confirmation has been sent to your email with your appointment details, full address and everything you need to know.</p>
+      <br/>
+      <p>If you have any questions please WhatsApp Ash directly on <strong>07821 530442</strong>.</p>
+      <br/>
+      <p style="font-size:0.75rem;">Please remember your patch test must be completed 48 hours before your appointment. WhatsApp Ash to arrange.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let selectedService = null;
+  let selectedDate = null;
+  let selectedTime = null;
+  let currentMonth = new Date().getMonth();
+  let currentYear = new Date().getFullYear();
+
+  const WORKING_HOURS = {
+    2: { start: 9, end: 15 },  // Tuesday
+    3: { start: 9, end: 15 },  // Wednesday
+    4: { start: 9, end: 15 },  // Thursday
+    5: { start: 9, end: 18 },  // Friday
+  };
+
+  // ── Service selection ──────────────────────────────────────────────────────
+  function selectService(el, name, price, durationMins, deposit, type) {
+    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedService = { name, price, durationMins, deposit, type };
+    document.getElementById('btn-next-1').disabled = false;
+  }
+
+  // ── Navigation ─────────────────────────────────────────────────────────────
+  function goToStep(n) {
+    if (n === 3) {
+      if (!validateDetails()) return;
+    }
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step-' + (n === 'success' ? 'success' : n)).classList.add('active');
+    window.scrollTo(0, 0);
+    if (n === 4) populateSummary();
+    if (n === 4) initStripe();
+  }
+
+  // ── Calendar ───────────────────────────────────────────────────────────────
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  function renderCalendar() {
+    const label = document.getElementById('cal-month-label');
+    label.textContent = MONTHS[currentMonth] + ' ' + currentYear;
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+
+    DAYS.forEach(d => {
+      const el = document.createElement('div');
+      el.className = 'cal-day-label';
+      el.textContent = d;
+      grid.appendChild(el);
+    });
+
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    for (let i = 0; i < firstDay; i++) {
+      const el = document.createElement('div');
+      el.className = 'cal-day empty';
+      grid.appendChild(el);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(currentYear, currentMonth, d);
+      const dow = date.getDay();
+      const el = document.createElement('div');
+      el.textContent = d;
+
+      if (date < today || !WORKING_HOURS[dow]) {
+        el.className = 'cal-day unavailable';
+      } else {
+        const maxDate = new Date();
+        maxDate.setDate(maxDate.getDate() + 56);
+        if (date > maxDate) {
+          el.className = 'cal-day unavailable';
+        } else {
+          el.className = 'cal-day available';
+          el.onclick = () => selectDate(date, el);
+        }
+      }
+      grid.appendChild(el);
+    }
+  }
+
+  function prevMonth() {
+    currentMonth--;
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    renderCalendar();
+    resetTimeSlots();
+  }
+
+  function nextMonth() {
+    currentMonth++;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    renderCalendar();
+    resetTimeSlots();
+  }
+
+  function selectDate(date, el) {
+    document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedDate = date;
+    selectedTime = null;
+    document.getElementById('btn-next-2').disabled = true;
+    renderTimeSlots(date);
+  }
+
+  function resetTimeSlots() {
+    selectedDate = null;
+    selectedTime = null;
+    document.getElementById('time-slot-section').style.display = 'none';
+    document.getElementById('btn-next-2').disabled = true;
+  }
+
+  function renderTimeSlots(date) {
+    const dow = date.getDay();
+    const hours = WORKING_HOURS[dow];
+    const section = document.getElementById('time-slot-section');
+    const label = document.getElementById('time-slot-label');
+    const container = document.getElementById('time-slots');
+
+    const dateStr = date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+    label.textContent = 'Available times — ' + dateStr;
+    container.innerHTML = '';
+
+    const durationHrs = (selectedService.durationMins) / 60;
+    const lastStart = hours.end - durationHrs;
+    const slots = [];
+
+    for (let h = hours.start; h <= lastStart; h += 0.5) {
+      const hh = Math.floor(h);
+      const mm = h % 1 === 0.5 ? '30' : '00';
+      slots.push(`${String(hh).padStart(2,'0')}:${mm}`);
+    }
+
+    if (slots.length === 0) {
+      container.innerHTML = '<p class="no-slots">No available slots for this treatment on this day.</p>';
+    } else {
+      slots.forEach(slot => {
+        const el = document.createElement('div');
+        el.className = 'time-slot';
+        el.textContent = slot;
+        el.onclick = () => selectTime(slot, el);
+        container.appendChild(el);
+      });
+    }
+
+    section.style.display = 'block';
+  }
+
+  function selectTime(time, el) {
+    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedTime = time;
+    document.getElementById('btn-next-2').disabled = false;
+  }
+
+  // ── Details validation ─────────────────────────────────────────────────────
+  function validateDetails() {
+    const fn = document.getElementById('first-name').value.trim();
+    const ln = document.getElementById('last-name').value.trim();
+    const em = document.getElementById('email').value.trim();
+    const ph = document.getElementById('phone').value.trim();
+    if (!fn || !ln || !em || !ph) {
+      alert('Please fill in all required fields.');
+      return false;
+    }
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(em)) {
+      alert('Please enter a valid email address.');
+      return false;
+    }
+    return true;
+  }
+
+  // ── Summary ────────────────────────────────────────────────────────────────
+  function populateSummary() {
+    document.getElementById('sum-service').textContent = selectedService.name;
+    document.getElementById('sum-date').textContent = selectedDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('sum-time').textContent = selectedTime;
+    const hrs = Math.floor(selectedService.durationMins / 60);
+    const mins = selectedService.durationMins % 60;
+    document.getElementById('sum-duration').textContent = hrs > 0 ? `${hrs}h ${mins > 0 ? mins + 'm' : ''}`.trim() : `${mins}m`;
+    document.getElementById('sum-deposit').textContent = '£' + selectedService.deposit.toFixed(2);
+    const balance = selectedService.price - selectedService.deposit;
+    document.getElementById('sum-balance').textContent = '£' + balance.toFixed(2);
+    document.getElementById('pay-amount').textContent = '£' + selectedService.deposit.toFixed(2);
+  }
+
+  function togglePayBtn() {
+    document.getElementById('pay-btn').disabled = !document.getElementById('terms-check').checked;
+  }
+
+  // ── Stripe ─────────────────────────────────────────────────────────────────
+  let stripe, cardElement;
+
+  function initStripe() {
+    if (stripe) return;
+    stripe = Stripe('pk_live_51Ng6HzKSEjQOYShXB9ZororWC8DUAGpt0qUGHkb6uk9au2LdTQ8vUxkXu6xSRr0rB9d8zxApiqE02K8G2bRy9S6y00wJMu7qtP');
+    const elements = stripe.elements();
+    cardElement = elements.create('card', {
+      style: {
+        base: {
+          fontFamily: 'DM Sans, sans-serif',
+          fontSize: '14px',
+          color: '#1a1612',
+          '::placeholder': { color: '#b0a89e' }
+        }
+      }
+    });
+    cardElement.mount('#card-element');
+    cardElement.on('change', e => {
+      document.getElementById('card-errors').textContent = e.error ? e.error.message : '';
+    });
+  }
+
+  async function handlePayment() {
+    const btn = document.getElementById('pay-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading"></span> Processing...';
+
+    try {
+      const resp = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: Math.round(selectedService.deposit * 100),
+          service: selectedService.name,
+          clientName: document.getElementById('first-name').value + ' ' + document.getElementById('last-name').value,
+          email: document.getElementById('email').value,
+          phone: document.getElementById('phone').value,
+          date: selectedDate.toISOString(),
+          time: selectedTime,
+          notes: document.getElementById('notes').value
+        })
+      });
+
+      const { clientSecret, error: serverError } = await resp.json();
+      if (serverError) throw new Error(serverError);
+
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card: cardElement }
+      });
+
+      if (error) {
+        document.getElementById('card-errors').textContent = error.message;
+        btn.disabled = false;
+        btn.innerHTML = 'Pay Booking Fee — £' + selectedService.deposit.toFixed(2);
+      } else if (paymentIntent.status === 'succeeded') {
+        goToStep('success');
+      }
+    } catch (err) {
+      document.getElementById('card-errors').textContent = 'Something went wrong. Please try again.';
+      btn.disabled = false;
+      btn.innerHTML = 'Pay Booking Fee — £' + selectedService.deposit.toFixed(2);
+    }
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  renderCalendar();
+</script>
+</body>
+</html>
