@@ -8,940 +8,437 @@
   <script src="https://js.stripe.com/v3/"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --cream: #F7F3EE;
-      --dark: #1a1612;
-      --muted: #6b6560;
-      --accent: #c4a882;
-      --accent-dark: #a08860;
-      --border: #e0d8cf;
-      --error: #c0392b;
-      --success: #2d6a4f;
+      --cream: #F7F3EE; --dark: #1a1612; --muted: #6b6560; --accent: #c4a882;
+      --accent-dark: #a08860; --border: #e0d8cf; --error: #c0392b;
     }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--cream);
-      color: var(--dark);
-      min-height: 100vh;
-    }
-
-    header {
-      padding: 2rem 1.5rem 1.5rem;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
-    }
-
-    header h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2rem;
-      font-weight: 300;
-      letter-spacing: 0.08em;
-      color: var(--dark);
-    }
-
-    header p {
-      font-size: 0.78rem;
-      color: var(--muted);
-      margin-top: 0.3rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .container {
-      max-width: 520px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem 4rem;
-    }
-
-    .step { display: none; }
-    .step.active { display: block; }
-
-    .step-label {
-      font-size: 0.7rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 1.5rem;
-    }
-
-    h2 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.6rem;
-      font-weight: 400;
-      margin-bottom: 1.5rem;
-      line-height: 1.2;
-    }
-
-    .service-card {
-      border: 1px solid var(--border);
-      border-radius: 2px;
-      padding: 1rem 1.2rem;
-      margin-bottom: 0.6rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      background: white;
-    }
-
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--dark); min-height: 100vh; }
+    header { padding: 2rem 1.5rem 1.5rem; text-align: center; border-bottom: 1px solid var(--border); }
+    header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300; letter-spacing: 0.08em; }
+    header p { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; letter-spacing: 0.12em; text-transform: uppercase; }
+    .container { max-width: 520px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .step { display: none; } .step.active { display: block; }
+    .step-label { font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.5rem; }
+    h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 400; margin-bottom: 1.5rem; line-height: 1.2; }
+    .progress { display: flex; gap: 4px; margin-bottom: 2rem; }
+    .progress-dot { height: 3px; flex: 1; background: var(--border); border-radius: 2px; transition: background 0.2s; }
+    .progress-dot.done { background: var(--accent-dark); }
+    .service-card { border: 1px solid var(--border); border-radius: 2px; padding: 1rem 1.2rem; margin-bottom: 0.6rem; cursor: pointer; transition: all 0.15s; background: white; position: relative; }
     .service-card:hover { border-color: var(--accent); }
     .service-card.selected { border-color: var(--accent-dark); background: #fdf8f3; }
-
-    .service-card .name {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.05rem;
-      font-weight: 500;
-    }
-
-    .service-card .meta {
-      font-size: 0.75rem;
-      color: var(--muted);
-      margin-top: 0.2rem;
-    }
-
-    .service-card .price {
-      font-size: 0.85rem;
-      font-weight: 500;
-      margin-top: 0.4rem;
-    }
-
-    .service-card .deposit-note {
-      font-size: 0.72rem;
-      color: var(--accent-dark);
-      margin-top: 0.15rem;
-    }
-
-    .service-card .description {
-      font-size: 0.76rem;
-      color: var(--muted);
-      margin-top: 0.4rem;
-      line-height: 1.5;
-    }
-
-    .category-label {
-      font-size: 0.68rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin: 1.2rem 0 0.5rem;
-    }
-
-    .patch-notice {
-      background: #fdf8f3;
-      border: 1px solid var(--accent);
-      border-radius: 2px;
-      padding: 0.8rem 1rem;
-      font-size: 0.78rem;
-      color: var(--dark);
-      margin-bottom: 1rem;
-      line-height: 1.5;
-    }
-
-    /* Calendar */
-    .calendar-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-
-    .calendar-nav button {
-      background: none;
-      border: 1px solid var(--border);
-      padding: 0.4rem 0.8rem;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.8rem;
-      color: var(--dark);
-      border-radius: 2px;
-    }
-
-    .calendar-nav span {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.1rem;
-    }
-
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-      margin-bottom: 1.5rem;
-    }
-
-    .cal-day-label {
-      text-align: center;
-      font-size: 0.65rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      padding: 0.3rem 0;
-    }
-
-    .cal-day {
-      text-align: center;
-      padding: 0.55rem 0;
-      font-size: 0.85rem;
-      border-radius: 2px;
-      cursor: pointer;
-      border: 1px solid transparent;
-      transition: all 0.1s;
-    }
-
-    .cal-day.empty { cursor: default; }
-    .cal-day.unavailable { color: var(--border); cursor: not-allowed; }
+    .service-card .check { position: absolute; top: 0.8rem; right: 0.8rem; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; transition: all 0.15s; }
+    .service-card.selected .check { background: var(--accent-dark); border-color: var(--accent-dark); color: white; }
+    .service-card .name { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; font-weight: 500; padding-right: 1.8rem; }
+    .service-card .meta { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+    .service-card .price { font-size: 0.85rem; font-weight: 500; margin-top: 0.4rem; }
+    .service-card .description { font-size: 0.76rem; color: var(--muted); margin-top: 0.4rem; line-height: 1.5; }
+    .category-label { font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin: 1.2rem 0 0.5rem; }
+    .selected-bar { background: var(--dark); color: var(--cream); padding: 0.8rem 1rem; border-radius: 2px; margin-bottom: 1rem; font-size: 0.82rem; display: none; justify-content: space-between; align-items: center; }
+    .selected-bar.visible { display: flex; }
+    .upsell-card { border: 1px solid var(--border); border-radius: 2px; padding: 1rem 1.2rem; margin-bottom: 0.6rem; cursor: pointer; background: white; transition: all 0.15s; position: relative; }
+    .upsell-card:hover { border-color: var(--accent); }
+    .upsell-card.selected { border-color: var(--accent-dark); background: #fdf8f3; }
+    .upsell-card .check { position: absolute; top: 0.8rem; right: 0.8rem; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; transition: all 0.15s; }
+    .upsell-card.selected .check { background: var(--accent-dark); border-color: var(--accent-dark); color: white; }
+    .upsell-card .name { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; font-weight: 500; padding-right: 1.8rem; }
+    .upsell-card .uprice { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+    .package-swap { background: #fff8e1; border: 1px solid #f0c040; border-radius: 2px; padding: 1rem; margin-bottom: 1rem; font-size: 0.82rem; line-height: 1.5; }
+    .package-swap strong { display: block; margin-bottom: 0.4rem; }
+    .swap-btns { display: flex; gap: 0.5rem; margin-top: 0.8rem; }
+    .swap-btn { flex: 1; padding: 0.5rem; border-radius: 2px; border: 1px solid var(--border); background: none; font-family: 'DM Sans', sans-serif; font-size: 0.72rem; cursor: pointer; }
+    .swap-btn.yes { background: var(--dark); color: white; border-color: var(--dark); }
+    .patch-notice { background: #fdf8f3; border: 1px solid var(--accent); border-radius: 2px; padding: 0.8rem 1rem; font-size: 0.78rem; color: var(--dark); margin-bottom: 1rem; line-height: 1.5; }
+    .calendar-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .calendar-nav button { background: none; border: 1px solid var(--border); padding: 0.4rem 0.8rem; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; color: var(--dark); border-radius: 2px; }
+    .calendar-nav span { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 1.5rem; }
+    .cal-day-label { text-align: center; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 0.3rem 0; }
+    .cal-day { text-align: center; padding: 0.55rem 0; font-size: 0.85rem; border-radius: 2px; cursor: pointer; border: 1px solid transparent; transition: all 0.1s; }
+    .cal-day.empty { cursor: default; } .cal-day.unavailable { color: var(--border); cursor: not-allowed; }
     .cal-day.available:hover { border-color: var(--accent); background: #fdf8f3; }
     .cal-day.selected { background: var(--accent-dark); color: white; border-color: var(--accent-dark); }
-
-    .time-slots {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .time-slot {
-      text-align: center;
-      padding: 0.6rem;
-      border: 1px solid var(--border);
-      border-radius: 2px;
-      cursor: pointer;
-      font-size: 0.82rem;
-      background: white;
-      transition: all 0.1s;
-    }
-
+    .time-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1.5rem; }
+    .time-slot { text-align: center; padding: 0.6rem; border: 1px solid var(--border); border-radius: 2px; cursor: pointer; font-size: 0.82rem; background: white; transition: all 0.1s; }
     .time-slot:hover { border-color: var(--accent); }
     .time-slot.selected { background: var(--accent-dark); color: white; border-color: var(--accent-dark); }
-    .time-slot.unavailable { color: var(--border); cursor: not-allowed; background: #f9f9f9; }
-
-    /* Form */
+    .no-slots { color: var(--muted); font-size: 0.82rem; font-style: italic; padding: 1rem 0; }
     .form-group { margin-bottom: 1.1rem; }
-
-    label {
-      display: block;
-      font-size: 0.72rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 0.4rem;
-    }
-
-    input, textarea {
-      width: 100%;
-      padding: 0.7rem 0.9rem;
-      border: 1px solid var(--border);
-      border-radius: 2px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.88rem;
-      background: white;
-      color: var(--dark);
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
+    label { display: block; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
+    input, textarea { width: 100%; padding: 0.7rem 0.9rem; border: 1px solid var(--border); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; background: white; color: var(--dark); outline: none; transition: border-color 0.15s; }
     input:focus, textarea:focus { border-color: var(--accent-dark); }
-
-    /* Terms */
-    .terms-box {
-      border: 1px solid var(--border);
-      border-radius: 2px;
-      padding: 1.2rem;
-      background: white;
-      font-size: 0.78rem;
-      line-height: 1.7;
-      color: var(--dark);
-      margin-bottom: 1rem;
-      max-height: 180px;
-      overflow-y: auto;
-    }
-
-    .terms-box h4 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1rem;
-      margin-bottom: 0.8rem;
-    }
-
+    .terms-box { border: 1px solid var(--border); border-radius: 2px; padding: 1.2rem; background: white; font-size: 0.78rem; line-height: 1.7; margin-bottom: 1rem; max-height: 180px; overflow-y: auto; }
+    .terms-box h4 { font-family: 'Cormorant Garamond', serif; font-size: 1rem; margin-bottom: 0.8rem; }
     .terms-box p { margin-bottom: 0.6rem; }
-
-    .checkbox-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.7rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .checkbox-row input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      min-width: 18px;
-      margin-top: 2px;
-      accent-color: var(--accent-dark);
-    }
-
-    .checkbox-row span {
-      font-size: 0.78rem;
-      line-height: 1.5;
-      color: var(--dark);
-    }
-
-    /* Payment */
-    #card-element {
-      padding: 0.7rem 0.9rem;
-      border: 1px solid var(--border);
-      border-radius: 2px;
-      background: white;
-      margin-bottom: 0.5rem;
-    }
-
-    #card-errors {
-      color: var(--error);
-      font-size: 0.75rem;
-      margin-bottom: 0.8rem;
-    }
-
-    .booking-summary {
-      border: 1px solid var(--border);
-      border-radius: 2px;
-      padding: 1rem 1.2rem;
-      background: white;
-      margin-bottom: 1.5rem;
-      font-size: 0.82rem;
-    }
-
-    .booking-summary h4 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1rem;
-      margin-bottom: 0.8rem;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 0.5rem;
-    }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.4rem;
-      color: var(--muted);
-    }
-
-    .summary-row.total {
-      font-weight: 500;
-      color: var(--dark);
-      border-top: 1px solid var(--border);
-      padding-top: 0.5rem;
-      margin-top: 0.5rem;
-    }
-
-    /* Buttons */
-    .btn {
-      width: 100%;
-      padding: 0.9rem;
-      border: none;
-      border-radius: 2px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.82rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .btn-primary {
-      background: var(--dark);
-      color: var(--cream);
-    }
-
-    .btn-primary:hover { background: #2d2825; }
-    .btn-primary:disabled { background: var(--border); cursor: not-allowed; }
-
-    .btn-back {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      margin-bottom: 0.8rem;
-    }
-
+    .checkbox-row { display: flex; align-items: flex-start; gap: 0.7rem; margin-bottom: 1.5rem; }
+    .checkbox-row input[type="checkbox"] { width: 18px; height: 18px; min-width: 18px; margin-top: 2px; accent-color: var(--accent-dark); }
+    .checkbox-row span { font-size: 0.78rem; line-height: 1.5; }
+    #card-element { padding: 0.7rem 0.9rem; border: 1px solid var(--border); border-radius: 2px; background: white; margin-bottom: 0.5rem; }
+    #card-errors { color: var(--error); font-size: 0.75rem; margin-bottom: 0.8rem; }
+    .booking-summary { border: 1px solid var(--border); border-radius: 2px; padding: 1rem 1.2rem; background: white; margin-bottom: 1.5rem; font-size: 0.82rem; }
+    .booking-summary h4 { font-family: 'Cormorant Garamond', serif; font-size: 1rem; margin-bottom: 0.8rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 0.4rem; color: var(--muted); }
+    .summary-row.total { font-weight: 500; color: var(--dark); border-top: 1px solid var(--border); padding-top: 0.5rem; margin-top: 0.5rem; }
+    .btn { width: 100%; padding: 0.9rem; border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+    .btn-primary { background: var(--dark); color: var(--cream); }
+    .btn-primary:hover { background: #2d2825; } .btn-primary:disabled { background: var(--border); cursor: not-allowed; }
+    .btn-back { background: none; border: 1px solid var(--border); color: var(--muted); margin-bottom: 0.8rem; }
     .btn-back:hover { border-color: var(--muted); color: var(--dark); }
-
-    /* Progress */
-    .progress {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 2rem;
-    }
-
-    .progress-dot {
-      height: 3px;
-      flex: 1;
-      background: var(--border);
-      border-radius: 2px;
-      transition: background 0.2s;
-    }
-
-    .progress-dot.done { background: var(--accent-dark); }
-
-    /* Success */
-    .success-screen {
-      text-align: center;
-      padding: 2rem 0;
-    }
-
-    .success-icon {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: #e8f5e9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 1.5rem;
-      font-size: 1.8rem;
-    }
-
-    .success-screen h2 {
-      margin-bottom: 0.8rem;
-    }
-
-    .success-screen p {
-      color: var(--muted);
-      font-size: 0.85rem;
-      line-height: 1.6;
-    }
-
-    .loading {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,0.4);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      margin-right: 0.5rem;
-      vertical-align: middle;
-    }
-
+    .btn-skip { background: none; border: 1px solid var(--border); color: var(--muted); margin-top: 0.5rem; }
+    .success-screen { text-align: center; padding: 2rem 0; }
+    .success-icon { width: 60px; height: 60px; border-radius: 50%; background: #e8f5e9; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 1.8rem; }
+    .success-screen p { color: var(--muted); font-size: 0.85rem; line-height: 1.6; }
+    .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 0.5rem; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .no-slots {
-      color: var(--muted);
-      font-size: 0.82rem;
-      font-style: italic;
-      padding: 1rem 0;
-    }
   </style>
 </head>
 <body>
-
 <header>
   <h1>Ash Dormer</h1>
-  <p>Permanent Makeup &amp; Beauty — Hazlemere, Buckinghamshire</p>
+  <p>Permanent Makeup &amp; Beauty &mdash; Hazlemere, Buckinghamshire</p>
 </header>
-
 <div class="container">
 
-  <!-- STEP 1: Choose Service -->
+  <!-- STEP 1 -->
   <div class="step active" id="step-1">
-    <div class="progress">
-      <div class="progress-dot done"></div>
-      <div class="progress-dot"></div>
-      <div class="progress-dot"></div>
-      <div class="progress-dot"></div>
-    </div>
-    <div class="step-label">Step 1 of 4</div>
+    <div class="progress"><div class="progress-dot done"></div><div class="progress-dot"></div><div class="progress-dot"></div><div class="progress-dot"></div><div class="progress-dot"></div></div>
+    <div class="step-label">Step 1 of 5</div>
     <h2>Choose your treatment</h2>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:1.2rem;">Select one or more treatments. Tap to select, tap again to deselect.</p>
+    <div class="selected-bar" id="selected-bar"><span id="selected-bar-text"></span><span id="selected-bar-total" style="font-weight:500;"></span></div>
 
     <div class="category-label">Brow Treatments</div>
-    <div class="service-card" onclick="selectService(this, 'Brow Wax & Tint', 27.50, 35, 13.75, 'small')">
-      <div class="name">Brow Wax &amp; Tint</div>
-      <div class="meta">30 min</div>
-      <div class="description">A process used to darken the brows to suit your natural or desired depth of colour, giving a more defined look, followed by a brow tidy or re-shape using wax and tweezers. Patch test required at least 48 hours prior to treatment.</div>
-      <div class="price">£27.50</div>
-      <div class="deposit-note">Booking fee: £13.75 (50% due now)</div>
-    </div>
-    <div class="service-card" onclick="selectService(this, 'Brow Lamination', 55.00, 65, 27.50, 'small')">
-      <div class="name">Brow Lamination</div>
-      <div class="meta">1 hour</div>
-      <div class="description">An eyebrow sculpting treatment that lasts around 6 weeks. This treatment enables you to gain control over unruly hairs, creating thicker brows with more movement. An optional tint and shape is included. Patch test 48 hours prior to treatment is required.</div>
-      <div class="price">£55.00</div>
-      <div class="deposit-note">Booking fee: £27.50 (50% due now)</div>
-    </div>
+    <div class="service-card" id="card-brow-wax" onclick="toggleService('brow-wax')"><div class="check">&#10003;</div><div class="name">Brow Wax &amp; Tint</div><div class="meta">30 min</div><div class="description">Tint to darken brows to your desired colour, followed by a tidy or re-shape using wax and tweezers. Patch test required 48 hours prior.</div><div class="price">&#163;27.50</div></div>
+    <div class="service-card" id="card-brow-lam" onclick="toggleService('brow-lam')"><div class="check">&#10003;</div><div class="name">Brow Lamination</div><div class="meta">1 hour</div><div class="description">Eyebrow sculpting treatment lasting around 6 weeks. Creates thicker brows with more movement. Optional tint and shape included. Patch test 48 hours prior required.</div><div class="price">&#163;55.00</div></div>
 
     <div class="category-label">Lash Treatments</div>
-    <div class="service-card" onclick="selectService(this, 'Lash Tint', 15.00, 20, 7.50, 'small')">
-      <div class="name">Lash Tint</div>
-      <div class="meta">15 min</div>
-      <div class="description">A process in which tint is applied to the eyelashes to darken them, giving the appearance of darker, fuller lashes without needing mascara or other makeup products. Patch test required 48 hours prior to treatment.</div>
-      <div class="price">£15.00</div>
-      <div class="deposit-note">Booking fee: £7.50 (50% due now)</div>
-    </div>
-    <div class="service-card" onclick="selectService(this, 'Lash Lift & Tint', 55.00, 70, 27.50, 'small')">
-      <div class="name">Lash Lift &amp; Tint</div>
-      <div class="meta">1 hour</div>
-      <div class="description">An all-natural, semi-permanent treatment that gives you the appearance of fuller, thicker eyelashes. The natural lashes are boosted from the root, giving them a lifted, lengthened appearance lasting around 6 weeks. A tint is included. Patch test 48 hours prior to treatment is required.</div>
-      <div class="price">£55.00</div>
-      <div class="deposit-note">Booking fee: £27.50 (50% due now)</div>
-    </div>
+    <div class="service-card" id="card-lash-tint" onclick="toggleService('lash-tint')"><div class="check">&#10003;</div><div class="name">Lash Tint</div><div class="meta">15 min</div><div class="description">Tint applied to eyelashes to darken them, giving the appearance of fuller lashes without mascara. Patch test required 48 hours prior.</div><div class="price">&#163;15.00</div></div>
+    <div class="service-card" id="card-lash-lift" onclick="toggleService('lash-lift')"><div class="check">&#10003;</div><div class="name">Lash Lift &amp; Tint</div><div class="meta">1 hour</div><div class="description">Semi-permanent treatment giving the appearance of fuller, thicker lashes lifted from the root, lasting around 6 weeks. Tint included. Patch test 48 hours prior required.</div><div class="price">&#163;55.00</div></div>
 
     <div class="category-label">Packages</div>
-    <div class="service-card" onclick="selectService(this, 'Lash & Brow Package', 100.00, 125, 50.00, 'small')">
-      <div class="name">Lash &amp; Brow Package</div>
-      <div class="meta">2 hours</div>
-      <div class="description">The perfect combination — a Lash Lift and Brow Lamination together in one appointment. Results last around 6 weeks. Patch test 48 hours prior to treatment is required.</div>
-      <div class="price">£100.00</div>
-      <div class="deposit-note">Booking fee: £50.00 (50% due now)</div>
-    </div>
+    <div class="service-card" id="card-lash-brow" onclick="toggleService('lash-brow')"><div class="check">&#10003;</div><div class="name">Lash &amp; Brow Package</div><div class="meta">2 hours</div><div class="description">Lash Lift &amp; Tint and Brow Lamination together in one appointment. Results last around 6 weeks. Patch test 48 hours prior required.</div><div class="price">&#163;100.00 <span style="font-size:0.72rem;color:var(--accent-dark);">Save &#163;10</span></div></div>
 
     <div class="category-label">Permanent Makeup</div>
-    <div class="service-card" onclick="selectService(this, 'Microblading Initial Session', 425.00, 145, 50.00, 'pmu')">
-      <div class="name">Microblading Initial Session</div>
-      <div class="meta">2 hr 15 min · Includes consultation · Females only</div>
-      <div class="description">A permanent makeup technique to create natural looking hair stroke brows. Consultation is included at the beginning. Patch test 48 hours prior to treatment is required. Please note: if you have previous microblading or permanent brow makeup, do not book this service — contact Ash directly first.</div>
-      <div class="price">£425.00</div>
-      <div class="deposit-note">Booking fee: £50.00 (fixed, due now)</div>
-    </div>
-    <div class="service-card" onclick="selectService(this, 'Combination Brows', 425.00, 165, 50.00, 'pmu')">
-      <div class="name">Combination Brows</div>
-      <div class="meta">2 hr 30 min · Females only</div>
-      <div class="description">Combination brows use both microblading and machine techniques in perfect harmony to create a soft natural front of the brow leading into a fuller, more defined body, arch and tail of the brow.</div>
-      <div class="price">£425.00</div>
-      <div class="deposit-note">Booking fee: £50.00 (fixed, due now)</div>
-    </div>
-    <div class="service-card" onclick="selectService(this, 'Ombré Brows', 425.00, 165, 50.00, 'pmu')">
-      <div class="name">Ombré Brows</div>
-      <div class="meta">2 hr 30 min · All skin types</div>
-      <div class="description">Also known as powder brows, this method uses a digital machine to create a soft powdered effect underneath the existing eyebrow hair. Fantastic for all skin types.</div>
-      <div class="price">£425.00</div>
-      <div class="deposit-note">Booking fee: £50.00 (fixed, due now)</div>
-    </div>
-    <div class="service-card" onclick="selectService(this, '6-18 Month Colour Boost', 195.00, 120, 50.00, 'pmu')">
-      <div class="name">6–18 Month Colour Boost</div>
-      <div class="meta">2 hours · Existing clients only</div>
-      <div class="description">Colour boost for microblading or machine method brows from 6–18 months after your 6–8 week perfecting session. Please only book if you have had a treatment with Ash previously.</div>
-      <div class="price">£195.00</div>
-      <div class="deposit-note">Booking fee: £50.00 (fixed, due now)</div>
-    </div>
-    <div class="service-card" onclick="selectService(this, '18 Month+ Colour Boost', 225.00, 120, 50.00, 'pmu')">
-      <div class="name">18 Month+ Colour Boost</div>
-      <div class="meta">2 hours · Existing clients only</div>
-      <div class="description">Colour boost for microblading or machine method brows from 18 months after your 6–8 week perfecting session. Please only book if you have had a treatment with Ash previously.</div>
-      <div class="price">£225.00</div>
-      <div class="deposit-note">Booking fee: £50.00 (fixed, due now)</div>
-    </div>
-    <div class="service-card" onclick="selectService(this, 'Face to Face Consultation (PMU)', 20.00, 10, 20.00, 'small')">
-      <div class="name">Face to Face Consultation</div>
-      <div class="meta">10 min · PMU only</div>
-      <div class="description">A £20 booking fee applies, which comes off your treatment price if you decide to go ahead with your permanent makeup brows. The full £20 is retained if you do not attend. A virtual consultation is also available — contact Ash via WhatsApp on 07821 530442 to arrange.</div>
-      <div class="price">£20.00</div>
-      <div class="deposit-note">Booking fee: £20.00 (deducted from treatment if you proceed)</div>
-    </div>
+    <div class="service-card" id="card-microblading" onclick="toggleService('microblading')"><div class="check">&#10003;</div><div class="name">Microblading Initial Session</div><div class="meta">2 hr 15 min &middot; Includes consultation &middot; Females only</div><div class="description">Permanent makeup technique creating natural looking hair stroke brows. Consultation included. Patch test 48 hours prior required. If you have previous microblading, contact Ash first.</div><div class="price">&#163;345.00</div></div>
+    <div class="service-card" id="card-combo-brows" onclick="toggleService('combo-brows')"><div class="check">&#10003;</div><div class="name">Combination Brows</div><div class="meta">2 hr 30 min &middot; Females only</div><div class="description">Microblading and machine techniques combined for a soft natural front leading into a fuller, more defined arch and tail.</div><div class="price">&#163;345.00</div></div>
+    <div class="service-card" id="card-ombre" onclick="toggleService('ombre')"><div class="check">&#10003;</div><div class="name">Ombr&eacute; Brows</div><div class="meta">2 hr 30 min &middot; All skin types</div><div class="description">Also known as powder brows. Digital machine creates a soft powdered effect. Fantastic for all skin types.</div><div class="price">&#163;345.00</div></div>
+    <div class="service-card" id="card-colour-boost-1" onclick="toggleService('colour-boost-1')"><div class="check">&#10003;</div><div class="name">6&ndash;18 Month Colour Boost</div><div class="meta">2 hours &middot; Existing clients only</div><div class="description">Colour boost for microblading or machine method brows from 6-18 months after your perfecting session.</div><div class="price">&#163;195.00</div></div>
+    <div class="service-card" id="card-colour-boost-2" onclick="toggleService('colour-boost-2')"><div class="check">&#10003;</div><div class="name">18 Month+ Colour Boost</div><div class="meta">2 hours &middot; Existing clients only</div><div class="description">Colour boost for microblading or machine method brows from 18 months after your perfecting session.</div><div class="price">&#163;225.00</div></div>
+    <div class="service-card" id="card-consult" onclick="toggleService('consult')"><div class="check">&#10003;</div><div class="name">Face to Face Consultation</div><div class="meta">10 min &middot; PMU only</div><div class="description">&#163;20 booking fee deducted from your treatment price if you go ahead. Full &#163;20 retained if you do not attend.</div><div class="price">&#163;20.00</div></div>
 
     <div class="category-label">Body Sculpting</div>
-    <div class="service-card" onclick="selectService(this, 'Small Area Fat Cavitation', 90.00, 45, 45.00, 'small')">
-      <div class="name">Small Area Fat Cavitation</div>
-      <div class="meta">45 min · Females only</div>
-      <div class="description">A non-invasive body sculpting treatment targeting stubborn fat on smaller areas such as the arms, upper back or love handles. Using advanced technology to help break down fat cells, giving a smoother, more contoured silhouette. Best results achieved when booked as a course. Not suitable if pregnant or breastfeeding, or if you have metal implants or conflicting conditions.</div>
-      <div class="price">£90.00</div>
-      <div class="deposit-note">Booking fee: £45.00 (50% due now)</div>
-    </div>
-    <div class="service-card" onclick="selectService(this, 'Large Area Fat Cavitation', 100.00, 45, 50.00, 'small')">
-      <div class="name">Large Area Fat Cavitation</div>
-      <div class="meta">45 min · Females only</div>
-      <div class="description">A non-invasive body sculpting treatment targeting stubborn fat on larger areas such as the stomach or thighs. Using advanced technology to help break down fat cells, giving a smoother, more contoured silhouette. Best results achieved when booked as a course. Not suitable if pregnant or breastfeeding, or if you have metal implants or conflicting conditions.</div>
-      <div class="price">£100.00</div>
-      <div class="deposit-note">Booking fee: £50.00 (50% due now)</div>
-    </div>
+    <div class="service-card" id="card-small-cav" onclick="toggleService('small-cav')"><div class="check">&#10003;</div><div class="name">Small Area Fat Cavitation</div><div class="meta">45 min &middot; Females only</div><div class="description">Non-invasive treatment targeting stubborn fat on smaller areas &mdash; arms, upper back, love handles. Not suitable if pregnant, breastfeeding, or with metal implants.</div><div class="price">&#163;90.00</div></div>
+    <div class="service-card" id="card-large-cav" onclick="toggleService('large-cav')"><div class="check">&#10003;</div><div class="name">Large Area Fat Cavitation</div><div class="meta">45 min &middot; Females only</div><div class="description">Non-invasive treatment targeting stubborn fat on larger areas &mdash; stomach, thighs. Not suitable if pregnant, breastfeeding, or with metal implants.</div><div class="price">&#163;100.00</div></div>
 
-    <div class="patch-notice">
-      <strong>Patch test required:</strong> A patch test is mandatory 48 hours prior to treatment for all lash, brow and PMU treatments. Please WhatsApp Ash on <strong>07821 530442</strong> to arrange collection before booking.
-    </div>
-
-    <button class="btn btn-primary" onclick="goToStep(2)" id="btn-next-1" disabled>Continue</button>
+    <div class="patch-notice" style="margin-top:1.2rem;"><strong>Patch test required</strong> for all lash, brow and PMU treatments &mdash; mandatory 48 hours prior. WhatsApp Ash on <strong>07821 530442</strong> to arrange.</div>
+    <button class="btn btn-primary" onclick="goToStep(2)" style="margin-top:1rem;">Continue</button>
   </div>
 
-  <!-- STEP 2: Choose Date & Time -->
+  <!-- STEP 2: Upsell -->
   <div class="step" id="step-2">
-    <div class="progress">
-      <div class="progress-dot done"></div>
-      <div class="progress-dot done"></div>
-      <div class="progress-dot"></div>
-      <div class="progress-dot"></div>
-    </div>
-    <div class="step-label">Step 2 of 4</div>
-    <h2>Choose a date &amp; time</h2>
-
-    <div class="calendar-nav">
-      <button onclick="prevMonth()">&#8592;</button>
-      <span id="cal-month-label"></span>
-      <button onclick="nextMonth()">&#8594;</button>
-    </div>
-    <div class="calendar-grid" id="calendar-grid"></div>
-
-    <div id="time-slot-section" style="display:none;">
-      <div class="category-label" id="time-slot-label"></div>
-      <div class="time-slots" id="time-slots"></div>
-    </div>
-
-    <button class="btn btn-back" onclick="goToStep(1)">&#8592; Back</button>
-    <button class="btn btn-primary" onclick="goToStep(3)" id="btn-next-2" disabled>Continue</button>
+    <div class="progress"><div class="progress-dot done"></div><div class="progress-dot done"></div><div class="progress-dot"></div><div class="progress-dot"></div><div class="progress-dot"></div></div>
+    <div class="step-label">Step 2 of 5</div>
+    <h2>Complete your visit</h2>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:1.5rem;">While you're in, why not add another treatment?</p>
+    <div id="upsell-content"></div>
+    <button class="btn btn-primary" onclick="goToStep(3)" style="margin-top:0.5rem;">Continue</button>
+    <button class="btn btn-skip" onclick="goToStep(3)">No thanks, continue</button>
+    <button class="btn btn-back" onclick="goToStep(1)" style="margin-top:0.5rem;">&#8592; Back</button>
   </div>
 
-  <!-- STEP 3: Your Details -->
+  <!-- STEP 3: Date & Time -->
   <div class="step" id="step-3">
-    <div class="progress">
-      <div class="progress-dot done"></div>
-      <div class="progress-dot done"></div>
-      <div class="progress-dot done"></div>
-      <div class="progress-dot"></div>
-    </div>
-    <div class="step-label">Step 3 of 4</div>
-    <h2>Your details</h2>
-
-    <div class="form-group">
-      <label>First name</label>
-      <input type="text" id="first-name" placeholder="e.g. Sarah" />
-    </div>
-    <div class="form-group">
-      <label>Last name</label>
-      <input type="text" id="last-name" placeholder="e.g. Johnson" />
-    </div>
-    <div class="form-group">
-      <label>Email address</label>
-      <input type="email" id="email" placeholder="e.g. sarah@email.com" />
-    </div>
-    <div class="form-group">
-      <label>Mobile number</label>
-      <input type="tel" id="phone" placeholder="e.g. 07700 900000" />
-    </div>
-    <div class="form-group">
-      <label>Notes (optional)</label>
-      <textarea id="notes" rows="3" placeholder="Anything Ash should know before your appointment..."></textarea>
-    </div>
-
+    <div class="progress"><div class="progress-dot done"></div><div class="progress-dot done"></div><div class="progress-dot done"></div><div class="progress-dot"></div><div class="progress-dot"></div></div>
+    <div class="step-label">Step 3 of 5</div>
+    <h2>Choose a date &amp; time</h2>
+    <div class="calendar-nav"><button onclick="prevMonth()">&#8592;</button><span id="cal-month-label"></span><button onclick="nextMonth()">&#8594;</button></div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+    <div id="time-slot-section" style="display:none;"><div class="category-label" id="time-slot-label"></div><div class="time-slots" id="time-slots"></div></div>
     <button class="btn btn-back" onclick="goToStep(2)">&#8592; Back</button>
-    <button class="btn btn-primary" onclick="goToStep(4)" id="btn-next-3">Continue</button>
+    <button class="btn btn-primary" onclick="goToStep(4)" id="btn-next-3" disabled>Continue</button>
   </div>
 
-  <!-- STEP 4: Terms & Payment -->
+  <!-- STEP 4: Details -->
   <div class="step" id="step-4">
-    <div class="progress">
-      <div class="progress-dot done"></div>
-      <div class="progress-dot done"></div>
-      <div class="progress-dot done"></div>
-      <div class="progress-dot done"></div>
-    </div>
-    <div class="step-label">Step 4 of 4</div>
-    <h2>Confirm &amp; pay</h2>
+    <div class="progress"><div class="progress-dot done"></div><div class="progress-dot done"></div><div class="progress-dot done"></div><div class="progress-dot done"></div><div class="progress-dot"></div></div>
+    <div class="step-label">Step 4 of 5</div>
+    <h2>Your details</h2>
+    <div class="form-group"><label>First name</label><input type="text" id="first-name" placeholder="e.g. Sarah"/></div>
+    <div class="form-group"><label>Last name</label><input type="text" id="last-name" placeholder="e.g. Johnson"/></div>
+    <div class="form-group"><label>Email address</label><input type="email" id="email" placeholder="e.g. sarah@email.com"/></div>
+    <div class="form-group"><label>Mobile number</label><input type="tel" id="phone" placeholder="e.g. 07700 900000"/></div>
+    <div class="form-group"><label>Notes (optional)</label><textarea id="notes" rows="3" placeholder="Anything Ash should know..."></textarea></div>
+    <button class="btn btn-back" onclick="goToStep(3)">&#8592; Back</button>
+    <button class="btn btn-primary" onclick="goToStep(5)">Continue</button>
+  </div>
 
+  <!-- STEP 5: Payment -->
+  <div class="step" id="step-5">
+    <div class="progress"><div class="progress-dot done"></div><div class="progress-dot done"></div><div class="progress-dot done"></div><div class="progress-dot done"></div><div class="progress-dot done"></div></div>
+    <div class="step-label">Step 5 of 5</div>
+    <h2>Confirm &amp; pay</h2>
     <div class="booking-summary">
       <h4>Booking Summary</h4>
-      <div class="summary-row"><span>Treatment</span><span id="sum-service"></span></div>
+      <div id="sum-treatments"></div>
       <div class="summary-row"><span>Date</span><span id="sum-date"></span></div>
       <div class="summary-row"><span>Time</span><span id="sum-time"></span></div>
       <div class="summary-row"><span>Duration</span><span id="sum-duration"></span></div>
-      <div class="summary-row"><span>Location</span><span>Hazlemere, HP15</span></div>
+      <div class="summary-row"><span>Location</span><span>Confirmed on booking confirmation</span></div>
       <div class="summary-row total"><span>Booking fee due now</span><span id="sum-deposit"></span></div>
       <div class="summary-row"><span style="font-size:0.75rem;color:var(--muted)">Balance due on the day (cash preferred)</span><span id="sum-balance" style="font-size:0.75rem;color:var(--muted)"></span></div>
     </div>
-
     <div class="terms-box">
       <h4>Booking Policy</h4>
-      <p><strong>Booking fee:</strong> Your booking fee is nonrefundable and nontransferable under any circumstances.</p>
-      <p><strong>Cancellations:</strong> If you cancel within 48 hours of your appointment your booking fee is forfeited in full. A new booking fee will be required to rebook.</p>
-      <p><strong>Rescheduling:</strong> You may reschedule your appointment once only. Rescheduling requests must be made more than 48 hours before your appointment. Your booking fee will not be transferred if you reschedule within 48 hours.</p>
-      <p><strong>No shows:</strong> If you do not attend your appointment without notice you will be required to pay your full treatment balance before a new appointment can be booked.</p>
-      <p><strong>Patch tests:</strong> A patch test is mandatory 48 hours prior to lash, brow and PMU treatments. Failure to complete a patch test may result in your appointment being cancelled without refund of your booking fee.</p>
+      <p><strong>Booking fee:</strong> Nonrefundable and nontransferable under any circumstances.</p>
+      <p><strong>Cancellations:</strong> Within 48 hours forfeits booking fee. New booking fee required to rebook.</p>
+      <p><strong>Rescheduling:</strong> Once only, with more than 48 hours notice.</p>
+      <p><strong>No shows:</strong> Full balance payment required before new appointment can be booked.</p>
+      <p><strong>Patch tests:</strong> Mandatory 48 hours prior to lash, brow and PMU treatments.</p>
     </div>
-
     <div class="checkbox-row">
-      <input type="checkbox" id="terms-check" onchange="togglePayBtn()" />
-      <span>By placing this booking I understand that my booking fee is nonrefundable and nontransferable, cancellations within 48 hours forfeit the booking fee, I may only reschedule once with more than 48 hours notice, and no shows will require full balance payment before rebooking.</span>
+      <input type="checkbox" id="terms-check" onchange="togglePayBtn()"/>
+      <span>By placing this booking I understand that my booking fee is nonrefundable and nontransferable, cancellations within 48 hours forfeit the booking fee, I may only reschedule once with more than 48 hours notice, and no shows require full balance payment before rebooking.</span>
     </div>
-
-    <div class="form-group">
-      <label>Card details</label>
-      <div id="card-element"></div>
-      <div id="card-errors"></div>
-    </div>
-
-    <button class="btn btn-back" onclick="goToStep(3)">&#8592; Back</button>
-    <button class="btn btn-primary" id="pay-btn" onclick="handlePayment()" disabled>
-      Pay Booking Fee — <span id="pay-amount"></span>
-    </button>
+    <div class="form-group"><label>Card details</label><div id="card-element"></div><div id="card-errors"></div></div>
+    <button class="btn btn-back" onclick="goToStep(4)">&#8592; Back</button>
+    <button class="btn btn-primary" id="pay-btn" onclick="handlePayment()" disabled>Pay Booking Fee &mdash; <span id="pay-amount"></span></button>
   </div>
 
   <!-- SUCCESS -->
   <div class="step" id="step-success">
     <div class="success-screen">
-      <div class="success-icon">✓</div>
+      <div class="success-icon">&#10003;</div>
       <h2>You're booked in!</h2>
-      <p>A confirmation has been sent to your email with your appointment details, full address and everything you need to know.</p>
-      <br/>
-      <p>If you have any questions please WhatsApp Ash directly on <strong>07821 530442</strong>.</p>
-      <br/>
-      <p style="font-size:0.75rem;">Please remember your patch test must be completed 48 hours before your appointment. WhatsApp Ash to arrange.</p>
+      <p>A confirmation has been sent to your email and mobile with your appointment details and address.</p>
+      <br/><p>Any questions? WhatsApp Ash on <strong>07821 530442</strong>.</p>
+      <br/><p style="font-size:0.75rem;">Remember your patch test must be completed 48 hours before your appointment.</p>
     </div>
   </div>
 
 </div>
-
 <script>
-  // ── State ──────────────────────────────────────────────────────────────────
-  let selectedService = null;
+  const SERVICES = {
+    'brow-wax':       { name: 'Brow Wax & Tint',                price: 27.50,  duration: 35,  pmu: false },
+    'brow-lam':       { name: 'Brow Lamination',                 price: 55.00,  duration: 65,  pmu: false },
+    'lash-tint':      { name: 'Lash Tint',                       price: 15.00,  duration: 20,  pmu: false },
+    'lash-lift':      { name: 'Lash Lift & Tint',                price: 55.00,  duration: 70,  pmu: false },
+    'lash-brow':      { name: 'Lash & Brow Package',             price: 100.00, duration: 125, pmu: false },
+    'microblading':   { name: 'Microblading Initial Session',    price: 345.00, duration: 145, pmu: true  },
+    'combo-brows':    { name: 'Combination Brows',               price: 345.00, duration: 165, pmu: true  },
+    'ombre':          { name: 'Ombre Brows',                     price: 345.00, duration: 165, pmu: true  },
+    'colour-boost-1': { name: '6-18 Month Colour Boost',         price: 195.00, duration: 120, pmu: true  },
+    'colour-boost-2': { name: '18 Month+ Colour Boost',          price: 225.00, duration: 120, pmu: true  },
+    'consult':        { name: 'Face to Face Consultation (PMU)', price: 20.00,  duration: 10,  pmu: true  },
+    'small-cav':      { name: 'Small Area Fat Cavitation',       price: 90.00,  duration: 45,  pmu: false },
+    'large-cav':      { name: 'Large Area Fat Cavitation',       price: 100.00, duration: 45,  pmu: false },
+  };
+
+  const UPSELLS = {
+    'brow-wax':   ['lash-tint','lash-lift'],
+    'brow-lam':   ['lash-tint','lash-lift'],
+    'lash-tint':  ['brow-wax','brow-lam'],
+    'lash-lift':  ['brow-wax','brow-lam'],
+    'lash-brow':  [],
+    'small-cav':  ['brow-wax','lash-tint','lash-lift','lash-brow'],
+    'large-cav':  ['brow-wax','lash-tint','lash-lift','lash-brow'],
+  };
+
+  let selectedIds = new Set();
   let selectedDate = null;
   let selectedTime = null;
   let currentMonth = new Date().getMonth();
   let currentYear = new Date().getFullYear();
+  const WORKING_HOURS = { 2:[9,15], 3:[9,15], 4:[9,15], 5:[9,18] };
 
-  const WORKING_HOURS = {
-    2: { start: 9, end: 15 },  // Tuesday
-    3: { start: 9, end: 15 },  // Wednesday
-    4: { start: 9, end: 15 },  // Thursday
-    5: { start: 9, end: 18 },  // Friday
-  };
-
-  // ── Service selection ──────────────────────────────────────────────────────
-  function selectService(el, name, price, durationMins, deposit, type) {
-    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedService = { name, price, durationMins, deposit, type };
-    document.getElementById('btn-next-1').disabled = false;
+  function toggleService(id) {
+    const s = SERVICES[id];
+    if (s.pmu) {
+      selectedIds.forEach(sid => { if (!SERVICES[sid].pmu) selectedIds.delete(sid); });
+      selectedIds.forEach(sid => { if (SERVICES[sid].pmu && sid !== id) selectedIds.delete(sid); });
+    } else {
+      selectedIds.forEach(sid => { if (SERVICES[sid].pmu) selectedIds.delete(sid); });
+    }
+    if (selectedIds.has(id)) { selectedIds.delete(id); } else { selectedIds.add(id); }
+    Object.keys(SERVICES).forEach(sid => {
+      const card = document.getElementById('card-' + sid);
+      if (card) card.classList.toggle('selected', selectedIds.has(sid));
+    });
+    updateSelectedBar();
   }
 
-  // ── Navigation ─────────────────────────────────────────────────────────────
-  function goToStep(n) {
-    if (n === 3) {
-      if (!validateDetails()) return;
+  function updateSelectedBar() {
+    const bar = document.getElementById('selected-bar');
+    if (selectedIds.size === 0) { bar.classList.remove('visible'); return; }
+    bar.classList.add('visible');
+    const names = [...selectedIds].map(id => SERVICES[id].name.split(' ')[0]).join(', ');
+    const total = getTotalPrice(); const deposit = getDeposit();
+    document.getElementById('selected-bar-text').textContent = names;
+    document.getElementById('selected-bar-total').textContent = 'Total: £' + total.toFixed(2) + ' · Deposit: £' + deposit.toFixed(2);
+  }
+
+  function getTotalPrice() { return [...selectedIds].reduce((s,id) => s + SERVICES[id].price, 0); }
+  function getTotalDuration() { return [...selectedIds].reduce((s,id) => s + SERVICES[id].duration, 0); }
+  function getDeposit() { const t = getTotalPrice(); return t >= 100 ? 50 : t * 0.5; }
+
+  function buildUpsell() {
+    const container = document.getElementById('upsell-content');
+    container.innerHTML = '';
+    const suggestions = new Set();
+    selectedIds.forEach(id => { if (UPSELLS[id]) UPSELLS[id].forEach(u => suggestions.add(u)); });
+    selectedIds.forEach(id => suggestions.delete(id));
+    if (suggestions.size === 0) { showStep(3); return; }
+    const hasBrowLam = selectedIds.has('brow-lam');
+    const hasLashLift = selectedIds.has('lash-lift');
+    if (hasBrowLam && suggestions.has('lash-lift') || hasLashLift && suggestions.has('brow-lam')) {
+      container.innerHTML += '<div class="package-swap" id="pkg-swap"><strong>Save £10 with the Lash & Brow Package</strong>Brow Lamination + Lash Lift & Tint together is £110 — but the Lash & Brow Package covers both treatments for just £100. Want to switch?<div class="swap-btns"><button class="swap-btn yes" onclick="swapToPackage()">Yes, switch to package</button><button class="swap-btn" onclick="document.getElementById(\'pkg-swap\').style.display=\'none\'">No thanks</button></div></div>';
     }
+    container.innerHTML += '<p style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;">Tap to add to your booking:</p>';
+    suggestions.forEach(id => {
+      const s = SERVICES[id];
+      const dur = s.duration < 60 ? s.duration + ' min' : Math.floor(s.duration/60) + 'h' + (s.duration%60 > 0 ? ' ' + s.duration%60 + 'm' : '');
+      container.innerHTML += '<div class="upsell-card" id="upsell-' + id + '" onclick="toggleUpsell(\'' + id + '\')"><div class="check">&#10003;</div><div class="name">' + s.name + '</div><div class="uprice">£' + s.price.toFixed(2) + ' · ' + dur + '</div></div>';
+    });
+  }
+
+  function toggleUpsell(id) {
+    if (id === 'lash-lift' && selectedIds.has('lash-tint')) { selectedIds.delete('lash-tint'); document.getElementById('card-lash-tint')?.classList.remove('selected'); document.getElementById('upsell-lash-tint')?.classList.remove('selected'); }
+    if (id === 'lash-tint' && selectedIds.has('lash-lift')) { selectedIds.delete('lash-lift'); document.getElementById('card-lash-lift')?.classList.remove('selected'); document.getElementById('upsell-lash-lift')?.classList.remove('selected'); }
+    if (selectedIds.has(id)) { selectedIds.delete(id); document.getElementById('upsell-'+id)?.classList.remove('selected'); }
+    else { selectedIds.add(id); document.getElementById('upsell-'+id)?.classList.add('selected'); }
+    updateSelectedBar();
+  }
+
+  function swapToPackage() {
+    selectedIds.delete('brow-lam'); selectedIds.delete('lash-lift');
+    selectedIds.add('lash-brow');
+    document.getElementById('card-brow-lam')?.classList.remove('selected');
+    document.getElementById('card-lash-lift')?.classList.remove('selected');
+    document.getElementById('card-lash-brow')?.classList.add('selected');
+    updateSelectedBar(); showStep(3);
+  }
+
+  function goToStep(n) {
+    if (n === 2) {
+      if (selectedIds.size === 0) { alert('Please select at least one treatment.'); return; }
+      const allPMU = [...selectedIds].every(id => SERVICES[id].pmu);
+      if (allPMU) { showStep(3); return; }
+      buildUpsell();
+    }
+    if (n === 4) {
+      if (!selectedDate) { alert('Please select a date.'); return; }
+      if (!selectedTime) { alert('Please select a time slot.'); return; }
+    }
+    if (n === 5) { if (!validateDetails()) return; populateSummary(); initStripe(); }
+    showStep(n);
+  }
+
+  function showStep(n) {
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.getElementById('step-' + (n === 'success' ? 'success' : n)).classList.add('active');
-    window.scrollTo(0, 0);
-    if (n === 4) populateSummary();
-    if (n === 4) initStripe();
+    window.scrollTo(0,0);
   }
 
-  // ── Calendar ───────────────────────────────────────────────────────────────
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
   function renderCalendar() {
-    const label = document.getElementById('cal-month-label');
-    label.textContent = MONTHS[currentMonth] + ' ' + currentYear;
-    const grid = document.getElementById('calendar-grid');
-    grid.innerHTML = '';
-
-    DAYS.forEach(d => {
-      const el = document.createElement('div');
-      el.className = 'cal-day-label';
-      el.textContent = d;
-      grid.appendChild(el);
-    });
-
+    document.getElementById('cal-month-label').textContent = MONTHS[currentMonth] + ' ' + currentYear;
+    const grid = document.getElementById('calendar-grid'); grid.innerHTML = '';
+    DAYS.forEach(d => { const el = document.createElement('div'); el.className = 'cal-day-label'; el.textContent = d; grid.appendChild(el); });
     const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
     const today = new Date(); today.setHours(0,0,0,0);
-
-    for (let i = 0; i < firstDay; i++) {
-      const el = document.createElement('div');
-      el.className = 'cal-day empty';
-      grid.appendChild(el);
-    }
-
+    const maxDate = new Date(); maxDate.setDate(maxDate.getDate()+56);
+    for (let i = 0; i < firstDay; i++) { const el = document.createElement('div'); el.className = 'cal-day empty'; grid.appendChild(el); }
     for (let d = 1; d <= daysInMonth; d++) {
-      const date = new Date(currentYear, currentMonth, d);
-      const dow = date.getDay();
-      const el = document.createElement('div');
-      el.textContent = d;
-
-      if (date < today || !WORKING_HOURS[dow]) {
-        el.className = 'cal-day unavailable';
-      } else {
-        const maxDate = new Date();
-        maxDate.setDate(maxDate.getDate() + 56);
-        if (date > maxDate) {
-          el.className = 'cal-day unavailable';
-        } else {
-          el.className = 'cal-day available';
-          el.onclick = () => selectDate(date, el);
-        }
-      }
+      const date = new Date(currentYear, currentMonth, d); const dow = date.getDay();
+      const el = document.createElement('div'); el.textContent = d;
+      if (date < today || !WORKING_HOURS[dow] || date > maxDate) { el.className = 'cal-day unavailable'; }
+      else { el.className = 'cal-day available'; el.onclick = () => selectDate(date, el); }
       grid.appendChild(el);
     }
   }
 
-  function prevMonth() {
-    currentMonth--;
-    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-    renderCalendar();
-    resetTimeSlots();
-  }
-
-  function nextMonth() {
-    currentMonth++;
-    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-    renderCalendar();
-    resetTimeSlots();
-  }
+  function prevMonth() { currentMonth--; if (currentMonth<0){currentMonth=11;currentYear--;} renderCalendar(); resetTimeSlots(); }
+  function nextMonth() { currentMonth++; if (currentMonth>11){currentMonth=0;currentYear++;} renderCalendar(); resetTimeSlots(); }
 
   function selectDate(date, el) {
     document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedDate = date;
-    selectedTime = null;
-    document.getElementById('btn-next-2').disabled = true;
+    el.classList.add('selected'); selectedDate = date; selectedTime = null;
+    document.getElementById('btn-next-3').disabled = true;
     renderTimeSlots(date);
   }
 
-  function resetTimeSlots() {
-    selectedDate = null;
-    selectedTime = null;
-    document.getElementById('time-slot-section').style.display = 'none';
-    document.getElementById('btn-next-2').disabled = true;
-  }
+  function resetTimeSlots() { selectedDate=null; selectedTime=null; document.getElementById('time-slot-section').style.display='none'; document.getElementById('btn-next-3').disabled=true; }
 
   function renderTimeSlots(date) {
-    const dow = date.getDay();
-    const hours = WORKING_HOURS[dow];
-    const section = document.getElementById('time-slot-section');
-    const label = document.getElementById('time-slot-label');
-    const container = document.getElementById('time-slots');
-
-    const dateStr = date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-    label.textContent = 'Available times — ' + dateStr;
-    container.innerHTML = '';
-
-    const durationHrs = (selectedService.durationMins) / 60;
-    const lastStart = hours.end - durationHrs;
+    const dow = date.getDay(); const hours = WORKING_HOURS[dow];
+    const totalDur = getTotalDuration() / 60; const lastStart = hours[1] - totalDur;
     const slots = [];
-
-    for (let h = hours.start; h <= lastStart; h += 0.5) {
-      const hh = Math.floor(h);
-      const mm = h % 1 === 0.5 ? '30' : '00';
-      slots.push(`${String(hh).padStart(2,'0')}:${mm}`);
-    }
-
-    if (slots.length === 0) {
-      container.innerHTML = '<p class="no-slots">No available slots for this treatment on this day.</p>';
-    } else {
-      slots.forEach(slot => {
-        const el = document.createElement('div');
-        el.className = 'time-slot';
-        el.textContent = slot;
-        el.onclick = () => selectTime(slot, el);
-        container.appendChild(el);
-      });
-    }
-
-    section.style.display = 'block';
+    for (let h = hours[0]; h <= lastStart; h += 0.5) { const hh = Math.floor(h); const mm = h%1===0.5?'30':'00'; slots.push(String(hh).padStart(2,'0')+':'+mm); }
+    const container = document.getElementById('time-slots'); container.innerHTML = '';
+    if (slots.length === 0) { container.innerHTML = '<p class="no-slots">No available slots for this combination on this day.</p>'; }
+    else { slots.forEach(slot => { const el = document.createElement('div'); el.className='time-slot'; el.textContent=slot; el.onclick=()=>selectTime(slot,el); container.appendChild(el); }); }
+    document.getElementById('time-slot-label').textContent = 'Available times — ' + date.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+    document.getElementById('time-slot-section').style.display = 'block';
   }
 
   function selectTime(time, el) {
     document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedTime = time;
-    document.getElementById('btn-next-2').disabled = false;
+    el.classList.add('selected'); selectedTime = time;
+    document.getElementById('btn-next-3').disabled = false;
   }
 
-  // ── Details validation ─────────────────────────────────────────────────────
   function validateDetails() {
     const fn = document.getElementById('first-name').value.trim();
     const ln = document.getElementById('last-name').value.trim();
     const em = document.getElementById('email').value.trim();
     const ph = document.getElementById('phone').value.trim();
-    if (!fn || !ln || !em || !ph) {
-      alert('Please fill in all required fields.');
-      return false;
-    }
-    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRe.test(em)) {
-      alert('Please enter a valid email address.');
-      return false;
-    }
+    if (!fn||!ln||!em||!ph) { alert('Please fill in all required fields.'); return false; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { alert('Please enter a valid email address.'); return false; }
     return true;
   }
 
-  // ── Summary ────────────────────────────────────────────────────────────────
   function populateSummary() {
-    document.getElementById('sum-service').textContent = selectedService.name;
-    document.getElementById('sum-date').textContent = selectedDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('sum-treatments').innerHTML = [...selectedIds].map(id => '<div class="summary-row"><span>'+SERVICES[id].name+'</span><span>£'+SERVICES[id].price.toFixed(2)+'</span></div>').join('');
+    document.getElementById('sum-date').textContent = selectedDate.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
     document.getElementById('sum-time').textContent = selectedTime;
-    const hrs = Math.floor(selectedService.durationMins / 60);
-    const mins = selectedService.durationMins % 60;
-    document.getElementById('sum-duration').textContent = hrs > 0 ? `${hrs}h ${mins > 0 ? mins + 'm' : ''}`.trim() : `${mins}m`;
-    document.getElementById('sum-deposit').textContent = '£' + selectedService.deposit.toFixed(2);
-    const balance = selectedService.price - selectedService.deposit;
-    document.getElementById('sum-balance').textContent = '£' + balance.toFixed(2);
-    document.getElementById('pay-amount').textContent = '£' + selectedService.deposit.toFixed(2);
+    const dur = getTotalDuration(); const dh = Math.floor(dur/60); const dm = dur%60;
+    document.getElementById('sum-duration').textContent = dh>0 ? dh+'h '+(dm>0?dm+'m':'') : dm+'m';
+    const deposit = getDeposit(); const total = getTotalPrice();
+    document.getElementById('sum-deposit').textContent = '£'+deposit.toFixed(2);
+    document.getElementById('sum-balance').textContent = '£'+(total-deposit).toFixed(2);
+    document.getElementById('pay-amount').textContent = '£'+deposit.toFixed(2);
   }
 
-  function togglePayBtn() {
-    document.getElementById('pay-btn').disabled = !document.getElementById('terms-check').checked;
-  }
+  function togglePayBtn() { document.getElementById('pay-btn').disabled = !document.getElementById('terms-check').checked; }
 
-  // ── Stripe ─────────────────────────────────────────────────────────────────
   let stripe, cardElement;
-
   function initStripe() {
     if (stripe) return;
     stripe = Stripe('pk_live_51Ng6HzKSEjQOYShXB9ZororWC8DUAGpt0qUGHkb6uk9au2LdTQ8vUxkXu6xSRr0rB9d8zxApiqE02K8G2bRy9S6y00wJMu7qtP');
     const elements = stripe.elements();
-    cardElement = elements.create('card', {
-      style: {
-        base: {
-          fontFamily: 'DM Sans, sans-serif',
-          fontSize: '14px',
-          color: '#1a1612',
-          '::placeholder': { color: '#b0a89e' }
-        }
-      }
-    });
+    cardElement = elements.create('card',{style:{base:{fontFamily:'DM Sans, sans-serif',fontSize:'14px',color:'#1a1612','::placeholder':{color:'#b0a89e'}}}});
     cardElement.mount('#card-element');
-    cardElement.on('change', e => {
-      document.getElementById('card-errors').textContent = e.error ? e.error.message : '';
-    });
+    cardElement.on('change', e => { document.getElementById('card-errors').textContent = e.error ? e.error.message : ''; });
   }
 
   async function handlePayment() {
     const btn = document.getElementById('pay-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loading"></span> Processing...';
-
+    btn.disabled = true; btn.innerHTML = '<span class="loading"></span> Processing...';
     try {
+      const serviceNames = [...selectedIds].map(id => SERVICES[id].name).join(', ');
       const resp = await fetch('/api/create-payment-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: Math.round(selectedService.deposit * 100),
-          service: selectedService.name,
-          clientName: document.getElementById('first-name').value + ' ' + document.getElementById('last-name').value,
-          email: document.getElementById('email').value,
-          phone: document.getElementById('phone').value,
-          date: selectedDate.toISOString(),
-          time: selectedTime,
-          notes: document.getElementById('notes').value
-        })
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ amount: Math.round(getDeposit()*100), price: getTotalPrice(), service: serviceNames, clientName: document.getElementById('first-name').value+' '+document.getElementById('last-name').value, email: document.getElementById('email').value, phone: document.getElementById('phone').value, date: selectedDate.toISOString(), time: selectedTime, notes: document.getElementById('notes').value })
       });
-
       const { clientSecret, error: serverError } = await resp.json();
       if (serverError) throw new Error(serverError);
-
-      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: { card: cardElement }
-      });
-
-      if (error) {
-        document.getElementById('card-errors').textContent = error.message;
-        btn.disabled = false;
-        btn.innerHTML = 'Pay Booking Fee — £' + selectedService.deposit.toFixed(2);
-      } else if (paymentIntent.status === 'succeeded') {
-        goToStep('success');
-      }
-    } catch (err) {
-      document.getElementById('card-errors').textContent = 'Something went wrong. Please try again.';
-      btn.disabled = false;
-      btn.innerHTML = 'Pay Booking Fee — £' + selectedService.deposit.toFixed(2);
-    }
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, { payment_method: { card: cardElement } });
+      if (error) { document.getElementById('card-errors').textContent = error.message; btn.disabled=false; btn.innerHTML='Pay Booking Fee — £'+getDeposit().toFixed(2); }
+      else if (paymentIntent.status === 'succeeded') { showStep('success'); }
+    } catch(err) { document.getElementById('card-errors').textContent='Something went wrong. Please try again.'; btn.disabled=false; btn.innerHTML='Pay Booking Fee — £'+getDeposit().toFixed(2); }
   }
 
-  // ── Init ───────────────────────────────────────────────────────────────────
   renderCalendar();
 </script>
 </body>
