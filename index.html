@@ -234,13 +234,41 @@
 
   const UPSELLS = {
     'brow-wax':   ['lash-tint','lash-lift'],
-    'brow-lam':   ['lash-tint','lash-lift'],
+    'brow-lam':   ['lash-lift'],
     'lash-tint':  ['brow-wax','brow-lam'],
     'lash-lift':  ['brow-wax','brow-lam'],
     'lash-brow':  [],
-    'small-cav':  ['brow-wax','lash-tint','lash-lift','lash-brow'],
-    'large-cav':  ['brow-wax','lash-tint','lash-lift','lash-brow'],
+    'small-cav':  ['lash-brow','brow-lam','lash-lift','brow-wax','lash-tint'],
+    'large-cav':  ['lash-brow','brow-lam','lash-lift','brow-wax','lash-tint'],
   };
+
+  const REDUNDANT_PAIRS = [
+    { child: 'lash-tint', parent: 'lash-lift', msg: 'A lash tint is included in your Lash Lift & Tint.' },
+    { child: 'brow-wax',  parent: 'brow-lam',  msg: 'A brow wax & tint is included in your Brow Lamination.' },
+  ];
+
+  function checkRedundancies() {
+    const warnings = [];
+    REDUNDANT_PAIRS.forEach(pair => {
+      if (selectedIds.has(pair.child) && selectedIds.has(pair.parent)) {
+        warnings.push(pair.msg);
+      }
+    });
+    let banner = document.getElementById('redundancy-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'redundancy-banner';
+      banner.style.cssText = 'background:#fff8e1;border:1px solid #f0c040;border-radius:2px;padding:0.8rem 1rem;font-size:0.78rem;line-height:1.5;margin-bottom:1rem;display:none;';
+      const selectedBarEl = document.getElementById('selected-bar');
+      selectedBarEl.parentNode.insertBefore(banner, selectedBarEl.nextSibling);
+    }
+    if (warnings.length > 0) {
+      banner.innerHTML = '<strong style="display:block;margin-bottom:0.3rem;">Just so you know:</strong>' + warnings.join(' ') + ' You may want to deselect the included treatment to avoid paying twice — or leave it and Ash will adjust on the day.';
+      banner.style.display = 'block';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
 
   let selectedIds = new Set();
   let selectedDate = null;
@@ -263,6 +291,7 @@
       if (card) card.classList.toggle('selected', selectedIds.has(sid));
     });
     updateSelectedBar();
+    checkRedundancies();
   }
 
   function updateSelectedBar() {
@@ -305,6 +334,7 @@
     if (selectedIds.has(id)) { selectedIds.delete(id); document.getElementById('upsell-'+id)?.classList.remove('selected'); }
     else { selectedIds.add(id); document.getElementById('upsell-'+id)?.classList.add('selected'); }
     updateSelectedBar();
+    checkRedundancies();
   }
 
   function swapToPackage() {
