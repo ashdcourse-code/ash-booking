@@ -1,7 +1,9 @@
 [build]
   functions = "functions"
   publish = "."
-  command = "cd functions && npm install && cd .."
+
+[functions]
+  node_bundler = "esbuild"
 
 [[redirects]]
   from = "/api/*"
@@ -12,10 +14,3 @@
   from = "/admin"
   to = "/admin.html"
   status = 200
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
-    X-Content-Type-Options = "nosniff"
