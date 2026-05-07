@@ -1,6 +1,3 @@
-bash
-
-cat > /home/claude/ash-deploy/functions/create-payment-intent.js << 'EOF'
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
@@ -56,8 +53,3 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
 };
-EOF
-echo "Done"
-Output
-
-Done
