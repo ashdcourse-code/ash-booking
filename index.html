@@ -445,7 +445,7 @@
   let stripe, cardElement;
   function initStripe() {
     if (stripe) return;
-    stripe = Stripe('pk_live_51Ng6HzKSEjQOYShXB9ZororWC8DUAGpt0qUGHkb6uk9au2LdTQ8vUxkXu6xSRr0rB9d8zxApiqE02K8G2bRy9S6y00wJMu7qtP');
+    stripe = Stripe('pk_live_51Ng6HzKSEjQOYShXB9ZororWC8DUAGptOqUGHkb6uk9au2LdTQ8vUxkXu6xSRr0rB9d8zxApiqEO2K8G2bRy9S6y00wJMu7qtP');
     const elements = stripe.elements();
     cardElement = elements.create('card',{style:{base:{fontFamily:'DM Sans, sans-serif',fontSize:'14px',color:'#1a1612','::placeholder':{color:'#b0a89e'}}}});
     cardElement.mount('#card-element');
