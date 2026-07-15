@@ -465,7 +465,27 @@
       if (serverError) throw new Error(serverError);
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, { payment_method: { card: cardElement } });
       if (error) { document.getElementById('card-errors').textContent = error.message; btn.disabled=false; btn.innerHTML='Pay Booking Fee — £'+getDeposit().toFixed(2); }
-      else if (paymentIntent.status === 'succeeded') { showStep('success'); }
+     else if (paymentIntent.status === 'succeeded') {
+        // Confirm booking - save to database and send SMS
+        await fetch('/api/confirm-booking', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            paymentIntentId: paymentIntent.id,
+            service: serviceNames,
+            clientName: document.getElementById('first-name').value + ' ' + document.getElementById('last-name').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            date: selectedDate.toISOString(),
+            time: selectedTime,
+            notes: document.getElementById('notes').value,
+            price: getTotalPrice(),
+            deposit: getDeposit(),
+            termsAgreedAt: new Date().toISOString()
+          })
+        });
+        showStep('success');
+      }
     } catch(err) { document.getElementById('card-errors').textContent='Something went wrong. Please try again.'; btn.disabled=false; btn.innerHTML='Pay Booking Fee — £'+getDeposit().toFixed(2); }
   }
 
